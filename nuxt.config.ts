@@ -1,10 +1,35 @@
+import fs from 'fs-extra';
+
+function copyFilesModule(inlineOptions, nuxt) {
+  // You can do whatever you like here..
+  // console.log(inlineOptions); // `123`
+  // console.log(nuxt); // `true` or `false`
+  // nuxt.hook('ready', async (nuxt) => {
+  //   console.log('Nuxt is ready');
+  // });
+
+  nuxt.hook('nitro:build:public-assets', async (nitro) => {
+    console.log('nitro', nitro.options.output.serverDir);
+
+    const srcDir = `./data/parsed/`;
+    const destDir = `${nitro.options.output.serverDir}/data/parsed/`;
+
+    // To copy a folder or file, select overwrite accordingly
+    try {
+      fs.copySync(srcDir, destDir, { overwrite: true });
+      console.log('success!');
+    } catch (err) {
+      console.error(err);
+    }
+  });
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   experimental: {
-    noVueServer: true
+    noVueServer: false
   },
   nitro: {
-    sourceMap: false,
     prerender: {
       routes: ['/']
     }
@@ -22,7 +47,7 @@ export default defineNuxtConfig({
       autoprefixer: {}
     }
   },
-  modules: ['@formkit/nuxt', 'nuxt-headlessui', 'nuxt-vitest'],
+  modules: ['@formkit/nuxt', 'nuxt-headlessui', 'nuxt-vitest', copyFilesModule],
   build: {
     analyze: true
   },

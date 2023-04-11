@@ -10,7 +10,8 @@
     "nuxt": "^3.3.3",
     "nuxt-headlessui": "^1.1.1",
     "tailwindcss": "^3.3.1",
-    "ts-simple-nameof": "^1.3.1"
+    "ts-simple-nameof": "^1.3.1",
+    "unstorage": "^1.4.1"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
@@ -37,9 +38,9 @@
   },
   "private": true,
   "scripts": {
-    "build": "nuxt build && yarn copy",
+    "build": "nuxt build",
     "checktypes": "vue-tsc --noemit",
-    "copy": "cpy ./data/parsed ./.output/data/parsed",
+    "copy": "cpy ./data/parsed ./.vercel/output/functions/__nitro.func/data/parsed",
     "dev": "nuxt dev --experimental-json-modules",
     "generate": "nuxt generate",
     "lint": "eslint --ext .ts,.js,.vue,.json --ignore-path .gitignore --fix . && yarn checktypes",
