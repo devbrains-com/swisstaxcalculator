@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "cpylua.language-postcss",
+    "pflannery.vscode-versionlens",
+    "eamodio.gitlens"
+  ]
+}

@@ -1,0 +1,11 @@
+@import './form.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  #__nuxt {
+    @apply h-full;
+  }
+}

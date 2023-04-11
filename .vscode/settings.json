@@ -1,0 +1,36 @@
+{
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "vue", "json", "jsonc"],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "class-name",
+    "ngClass",
+    "formClass",
+    "innerClass",
+    "outerClass",
+    "prefixClass",
+    "suffixClass",
+    "actionsClass",
+    "form-class",
+    "inner-class",
+    "outer-class",
+    "prefix-class",
+    "suffix-class",
+    "actions-class",
+    "classes",
+    "outer"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
