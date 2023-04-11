@@ -30,7 +30,7 @@
                 type="autocomplete"
                 :name="nameof < TaxInput > ((x) => x.locationId)"
                 label="Steuergemeinde"
-                :options="taxLocations.data.value ?? []"
+                :options="taxLocations"
                 outer-class="col-span-2"
                 :filter-min-length="2"
               />
@@ -363,12 +363,11 @@ import {
 } from '~~/lib/components/listOptions';
 import { TaxInput, TaxInputPerson, TaxRelationship, TaxResult } from '~~/lib/taxes/types';
 
-const defaultInput: TaxInput = {
+const defaultInput: Partial<TaxInput> = {
   taxType: 'ev',
   children: 0,
   fortune: 250000,
   locationId: 66,
-  cantonId: 26,
   relationship: 's',
   year: 2022,
   persons: [
@@ -382,7 +381,15 @@ const defaultInput: TaxInput = {
   ]
 };
 
-const taxLocations = useLazyFetch(`/api/locations`);
+const taxLocationsResult = useLazyFetch(`/api/locations`);
+
+const taxLocations = computed(
+  () =>
+    taxLocationsResult.data.value?.map((item) => ({
+      value: item.BfsID,
+      label: `${item.BfsName} (${item.Canton})`
+    })) ?? []
+);
 
 const civilStatus = ref<TaxRelationship>();
 
@@ -474,9 +481,15 @@ const detailsDeductionsFortune = computed(() => {
 });
 
 const submit = async (value: any) => {
+  // Add cantonId accordign to locationId
+  const taxInput: Partial<TaxInput> = {
+    ...value,
+    cantonId: taxLocationsResult.data.value?.find((x) => x.BfsID === value.locationId)?.CantonID
+  };
+
   const result = await $fetch(`/api/taxes/`, {
     method: 'post',
-    body: value
+    body: taxInput
   });
 
   taxes.value = result;

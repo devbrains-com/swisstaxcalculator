@@ -5,7 +5,7 @@ import { TaxLocation } from '../types';
 
 const locationsByYearAndCity = new Map<number, Map<number, TaxLocation>>();
 
-const locationsByYear = new Map<number, { value: number; label: string }[]>();
+const locationsByYear = new Map<number, TaxLocation[]>();
 
 const loadLocationsIfRequired = async (year: number) => {
   if (locationsByYearAndCity.has(year)) return;
@@ -23,13 +23,7 @@ const loadLocationsIfRequired = async (year: number) => {
     locationsByCity.set(location.BfsID, location);
   });
 
-  locationsByYear.set(
-    year,
-    locations.map((location) => ({
-      value: location.BfsID,
-      label: `${location.BfsName} (${location.Canton})`
-    }))
-  );
+  locationsByYear.set(year, locations);
 };
 
 export const getCantonIdByCityId = async (cityId: number, year: number) => {

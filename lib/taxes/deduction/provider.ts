@@ -18,17 +18,6 @@ const loadDeductionsIfRequired = async (cantonId: number, year: number) => {
     (await readFile(new URL(resolvedPath, import.meta.url))).toString()
   );
 
-  // const deductions = await useStorage('assets:server').getItem(
-  //   `data/parsed/${year}/deductions/${cantonId}.json`
-  // );
-  // const deductions = await useStorage('assets/data').getItem(
-  //   `parsed/${year}/deductions/${cantonId}.json`
-  // );
-  const deductions = await useStorage('root:data').getKeys();
-
-  deductions.forEach((deduction) => console.log(deduction));
-  console.log(deductions);
-
   let taxDeductionsByCanton = taxDeductionsByYearAndCanton.get(year);
 
   if (!taxDeductionsByCanton) {

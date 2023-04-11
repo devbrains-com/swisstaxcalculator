@@ -45,6 +45,9 @@ export const getTaxFactors = async (taxInput: TaxInput) => {
     .get(taxInput.year)
     ?.get(taxInput.cantonId)
     ?.get(taxInput.locationId);
-  if (!factor) throw new Error('Factor not found');
+  if (!factor)
+    throw new Error(
+      `Factor not found for canton: ${taxInput.cantonId}, year: ${taxInput.year}, city: ${taxInput.locationId}`
+    );
   return factor;
 };
