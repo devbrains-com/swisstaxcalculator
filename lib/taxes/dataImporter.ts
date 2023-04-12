@@ -1,11 +1,15 @@
+/* eslint-disable no-console */
 import { importAndParseDeductions } from './deduction/dataImporter';
 import { importAndParseFactors } from './factor/dataImporter';
 import { importAndParseTarifs } from './tarif/dataImporter';
 
-const year = 2022;
+const yearInput = Number.parseInt(process.argv[2]);
 
-importAndParseTarifs(year);
-importAndParseFactors(year);
-importAndParseDeductions(year);
-
+if (!yearInput) {
+  console.log('Please provide a year as first argument');
+} else {
+  importAndParseTarifs(yearInput);
+  importAndParseFactors(yearInput);
+  importAndParseDeductions(yearInput);
+}
 export {};
