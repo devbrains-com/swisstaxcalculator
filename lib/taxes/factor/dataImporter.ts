@@ -29,6 +29,7 @@ export const importAndParseFactors = (year: number) => {
   console.log(`Saved ${locations.length} locations`);
 
   const factorsByCanton = factors.reduce((acc, factorRaw) => {
+    factorRaw = correctFactors(factorRaw);
     const cantonId = factorRaw.Location.CantonID;
 
     if (!acc[cantonId]) {
@@ -67,6 +68,25 @@ export const importAndParseFactors = (year: number) => {
   }
 
   console.log('Finished loading factors');
+};
+
+const correctFactors = (factors: TaxFactorsRaw) => {
+  // Correct Basel-Stadt to have only canton taxes
+  if (factors.Location.BfsID === 2701) {
+    factors.IncomeRateCanton += factors.IncomeRateCity;
+    factors.IncomeRateCity = 0;
+
+    factors.FortuneRateCanton += factors.FortuneRateCity;
+    factors.FortuneRateCity = 0;
+
+    factors.ProfitTaxRateCanton += factors.ProfitTaxRateCity;
+    factors.ProfitTaxRateCity = 0;
+
+    factors.CapitalTaxRateCanton += factors.CapitalTaxRateCity;
+    factors.CapitalTaxRateCity = 0;
+  }
+
+  return factors;
 };
 
 const loadFactorsJson = (year: number) => {
