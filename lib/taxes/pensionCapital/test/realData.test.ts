@@ -1,7 +1,8 @@
 import { describe, test, expect } from 'vitest';
 import { DineroChf, dineroChf, dineroToNumber, dineroRound } from '~/lib/utils/dinero';
-import { getPensionCreditDefinition, calculatePensionCapitalIncomeTaxes } from '..';
+import { calculatePensionCapitalIncomeTaxes } from '..';
 import { TaxTarifGroup } from '../../tarif/types';
+import { getPensionCreditDefinition } from '../provider';
 
 describe('pension capital', () => {
   test('get definition throws error if canton not found', () => {

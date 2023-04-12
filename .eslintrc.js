@@ -14,6 +14,7 @@ module.exports = {
     'prettier'
   ],
   plugins: ['sort-class-members'],
+  ignorePatterns: ['/data/**/*'], // Ignore data folder
   rules: {
     '@typescript-eslint/no-unused-vars': 'warn',
     'vue/multi-word-component-names': 'off',

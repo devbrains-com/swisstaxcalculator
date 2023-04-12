@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs';
 import path from 'path';
 import {
@@ -24,11 +25,16 @@ const getCantonId = (deduction: TaxDeductionTableRaw) => {
 
 // - Load the raw tarifs from the tarifs.json file in the data folder by the year of the tarif
 // - export a json per item into the data folder with a subfolder by year
-export const loadDeductions = (year: number) => {
+export const importAndParseDeductions = (year: number) => {
+  console.log('Start loading deduction tables');
   const deductions = loadDeudctionsJson(year);
+  console.log(`Loaded ${deductions.length} deducion tables`);
+
   const deductionsByCanton = deductions.reduce((acc, deductionRaw) => {
     const cantonId = getCantonId(deductionRaw);
-    if (cantonId === -1) return acc;
+    if (cantonId === -1) {
+      return acc;
+    }
 
     const deduction: TaxDeductionTable = {
       type: deductionRaw.TaxType as TaxDeductionTableType,
@@ -61,6 +67,8 @@ export const loadDeductions = (year: number) => {
     const deduction = deductionsByCanton[canton];
     saveDeductionsJson(year, canton, deduction);
   }
+
+  console.log('Finished loading deduction tables');
 };
 
 const loadDeudctionsJson = (year: number) => {
@@ -77,4 +85,5 @@ const saveDeductionsJson = (year: number, filename: string, payload: any) => {
   });
   const data = JSON.stringify(payload, null);
   fs.writeFileSync(`${filePath}/${filename}.json`, data);
+  // console.log(`Successfully saved ${filePath}/${filename}.json`);
 };

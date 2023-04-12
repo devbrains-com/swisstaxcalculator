@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs';
 import path from 'path';
 import { TaxFactors, TaxFactorsRaw } from './types';
@@ -6,8 +7,10 @@ import { TaxLocation } from '../types';
 
 // - Load the raw tarifs from the tarifs.json file in the data folder by the year of the tarif
 // - export a json per item into the data folder with a subfolder by year
-export const loadFactors = (year: number) => {
+export const importAndParseFactors = (year: number) => {
+  console.log('Start loading factors');
   const factors = loadFactorsJson(year);
+  console.log(`Loaded ${factors.length} factors`);
 
   const locations = factors.reduce((acc, factorRaw) => {
     const location: TaxLocation = {
@@ -23,6 +26,7 @@ export const loadFactors = (year: number) => {
     return acc;
   }, [] as TaxLocation[]);
   saveLocationsJson(year, 'locations', locations);
+  console.log(`Saved ${locations.length} locations`);
 
   const factorsByCanton = factors.reduce((acc, factorRaw) => {
     const cantonId = factorRaw.Location.CantonID;
@@ -61,6 +65,8 @@ export const loadFactors = (year: number) => {
   for (const canton in factorsByCanton) {
     saveFactorsJson(year, canton, factorsByCanton[canton]);
   }
+
+  console.log('Finished loading factors');
 };
 
 const loadFactorsJson = (year: number) => {

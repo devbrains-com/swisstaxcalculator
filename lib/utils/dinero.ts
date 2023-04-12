@@ -21,10 +21,6 @@ export const dineroAddMany = (...addends: Dinero<number>[]) => addends.reduce(ad
 
 export const dineroSubtractMany = (...addends: Dinero<number>[]) => addends.reduce(subtract);
 
-export const transformRoundNumber = ({ value }: { value: string; currency: Currency<number> }) => {
-  return Math.round(Number(value));
-};
-
 export const transformNumber = ({ value }: { value: string; currency: Currency<number> }) => {
   return Number(value);
 };
@@ -46,16 +42,19 @@ export const dineroChf = (amount: number, scale?: number) => {
   return dinero({ amount: amountResult, currency: CHF, scale: scaleResult });
 };
 
-export const dineroToScaled = (amount: number, scale: number) => {
-  return { amount: Math.round(amount * 10 ** scale), scale };
-};
-
 export const dineroScaledPercent = (value: number, precision: number) => {
   const factor = 10 ** precision;
   const amount = Math.round(value * factor);
 
   // +2 to make it a factor -> / 100
   return { amount, scale: precision + 2 };
+};
+
+export const dineroScaledFactor = (value: number, precision: number) => {
+  const factor = 10 ** precision;
+  const amount = Math.round(value * factor);
+
+  return { amount, scale: precision };
 };
 
 export const multiplyDineroPercent = (
@@ -70,25 +69,7 @@ export const multiplyDineroFactor = (input: Dinero<number>, factor: number, prec
   return trimScale(multiply(input, dineroScaledFactor(factor, precision)));
 };
 
-export const dineroScaledFactor = (value: number, precision: number) => {
-  const factor = 10 ** precision;
-  const amount = Math.round(value * factor);
-
-  return { amount, scale: precision };
-};
-
-export const dineroScaled = (amount: number, scale: number) => {
-  const factor = 10 ** CHF.exponent;
-  const amountResult = Math.round(amount * factor);
-  const scaleResult = CHF.exponent + scale;
-  return { amount: amountResult, scale: scaleResult };
-};
-
 export const dineroToNumber = (input: Dinero<number>) => toDecimal(input, transformNumber);
-
-export const dineroRoundToNumber = (input: Dinero<number>, scale = 0) => {
-  return toDecimal(dineroRound(input, scale), transformNumber);
-};
 
 export const dineroMin = (...dineros: Dinero<number>[]) => {
   return minimum(dineros);

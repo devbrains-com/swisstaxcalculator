@@ -1,14 +1,14 @@
-import { multiply, greaterThan } from 'dinero.js';
+import { greaterThan } from 'dinero.js';
 import { sortArray } from '~/lib/utils/array';
 import {
   dineroChf,
   dineroRound,
-  dineroToScaled,
   dineroToNumber,
   dineroSubtractMany,
   dineroMin,
-  dineroScaled,
-  dineroMax
+  dineroMax,
+  multiplyDineroPercent,
+  multiplyDineroFactor
 } from '~/lib/utils/dinero';
 import { maxSalaryNbuAlv } from './constants';
 import { TaxDeductionDefinition, TaxDeductionTableExtended, TaxDeductionTableItem } from './types';
@@ -131,16 +131,14 @@ export const calculateGrossNetDetails = (taxInput: TaxInput): TaxGrossNetDetail[
       };
     }
 
+    const maxSalaryNbuAlvDinero = dineroChf(maxSalaryNbuAlv);
     const grossIncome = dineroChf(person.income);
-    const ahvIvEoDeduction = dineroRound(multiply(grossIncome, { amount: 53, scale: 3 }));
+    const ahvIvEoDeduction = dineroRound(multiplyDineroPercent(grossIncome, 5.3, 1));
     const alvDeduction = dineroRound(
-      multiply(dineroChf(Math.min(person.income, maxSalaryNbuAlv)), {
-        amount: 11,
-        scale: 3
-      })
+      multiplyDineroPercent(dineroMin(grossIncome, maxSalaryNbuAlvDinero), 1.1, 1)
     );
     const nbuDeduction = dineroRound(
-      multiply(dineroChf(Math.min(person.income, maxSalaryNbuAlv)), dineroToScaled(0.004, 3))
+      multiplyDineroPercent(dineroMin(grossIncome, maxSalaryNbuAlvDinero), 0.4, 1)
     );
     const pkDeduction = dineroChf(person.pkDeduction ?? 0);
 
@@ -187,8 +185,8 @@ export const calculateDeductionByDefinition = (
         id: deductionDefinition.id,
         name: deductionCanton?.name.de ?? deductionBund?.name.de ?? 'Unbekannter Abzug',
         target: deductionInput.target ?? '',
-        amountCanton: multiply(amountCanton, deductionInput.multiplier ?? 1),
-        amountBund: multiply(amountBund, deductionInput.multiplier ?? 1)
+        amountCanton: multiplyDineroFactor(amountCanton, deductionInput.multiplier ?? 1, 1),
+        amountBund: multiplyDineroFactor(amountBund, deductionInput.multiplier ?? 1, 1)
       };
 
       if (
@@ -205,16 +203,16 @@ export const calculateDeductionByDefinition = (
 };
 
 export const calculateDeductionByFormat = (deduction: TaxDeductionTableItem, amount = 0) => {
-  // console.log(deduction);
+  const amountDinero = dineroChf(amount);
   switch (deduction.format) {
     case 'MAXIMUM':
-      return dineroMin(dineroChf(amount), dineroChf(deduction.maximum));
+      return dineroMin(amountDinero, dineroChf(deduction.maximum));
     case 'PERCENT':
-      return dineroRound(multiply(dineroChf(amount), dineroScaled(deduction.percent, 2)));
+      return dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5));
     case 'PERCENT,MINIMUM,MAXIMUM':
       return dineroMin(
         dineroMax(
-          dineroRound(multiply(dineroChf(amount), dineroScaled(deduction.percent, 2))),
+          dineroRound(multiplyDineroPercent(amountDinero, deduction.percent, 5)),
           dineroChf(deduction.minimum)
         ),
         dineroChf(deduction.maximum)

@@ -1,9 +1,10 @@
 import { describe, test, expect, vi, afterEach, Mock } from 'vitest';
 import * as tarifs from '~/lib/taxes/tarif';
 import { dineroChf, dineroToNumber } from '~/lib/utils/dinero';
-import { calculateTaxesPensionCapitalByType, getPensionCreditDefinition } from '..';
+import { calculateTaxesPensionCapitalByType } from '..';
 import { getTaxInputForTest } from '../../test/helpers';
 import { TaxRelationship } from '../../types';
+import { getPensionCreditDefinition } from '../provider';
 
 vi.mock('../../tarif/provider', () => {
   return {

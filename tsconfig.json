@@ -1,6 +1,14 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    "compilerOptions": {
+      "esModuleInterop": true,
+      "module": "CommonJS",
+      "target": "ES6"
+    }
+  },
   "vueCompilerOptions": {
     "experimentalRfc436": true,
     "jsxTemplates": true

@@ -1,11 +1,4 @@
-import { multiply } from 'dinero.js';
-import {
-  DineroChf,
-  dineroRound,
-  multiplyDineroPercent,
-  dineroAddMany,
-  dineroScaled
-} from '~/lib/utils/dinero';
+import { DineroChf, dineroRound, multiplyDineroPercent, dineroAddMany } from '~/lib/utils/dinero';
 import { getTaxFactors } from './provider';
 import { TaxFactors } from './types';
 import { TaxConfession, TaxInput } from '../types';
@@ -63,20 +56,18 @@ export const calculateTaxesCantonAndCity = async (
     )
   );
   const taxesFortuneCanton = dineroRound(
-    multiply(taxesFortuneBase, dineroScaled(factor.FortuneRateCanton, 2))
+    multiplyDineroPercent(taxesFortuneBase, factor.FortuneRateCanton, 5)
   );
   const taxesFortuneCity = dineroRound(
-    multiply(taxesFortuneBase, dineroScaled(factor.FortuneRateCity, 2))
+    multiplyDineroPercent(taxesFortuneBase, factor.FortuneRateCity, 5)
   );
   const taxesFortuneChurch = dineroRound(
     dineroAddMany(
       ...taxInput.persons.map((person) =>
-        multiply(
+        multiplyDineroPercent(
           taxesFortuneBase,
-          dineroScaled(
-            getChurchFortuneFactor(person.confession, factor) / taxInput.persons.length,
-            2
-          )
+          getChurchFortuneFactor(person.confession, factor) / taxInput.persons.length,
+          5
         )
       )
     )

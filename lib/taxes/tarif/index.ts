@@ -96,11 +96,6 @@ const calculateTaxesByTypeZurich = (amount: Dinero<number>, tarif: TaxTarif) => 
       return taxes;
     }
   }
-
-  console.log(
-    `No Tarif found for income ${toDecimal(amount)}, ${tarif.taxType}, ${tarif.tableType}`
-  );
-
   return taxes;
 };
 

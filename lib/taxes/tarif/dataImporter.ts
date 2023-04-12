@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs';
 import path from 'path';
 import { TaxTarif, TaxTarifRaw, TaxTarifTableType } from './types';
@@ -13,14 +14,23 @@ const getCantonID = (tarif: TaxTarifRaw) => {
     return tarif.Location.CantonID;
   }
 
-  // console.log('Canton not found', tarif.Target, tarif.Location);
+  console.log(
+    'Unsupported target type',
+    tarif.Target,
+    tarif.Group,
+    tarif.Splitting,
+    tarif.Location
+  );
   return -1;
 };
 
 // - Load the raw tarifs from the tarifs.json file in the data folder by the year of the tarif
 // - export a json per item into the data folder with a subfolder by year
-export const loadTarifs = (year: number) => {
+export const importAndParseTarifs = (year: number) => {
+  console.log('Start loading tarif tables');
   const tarifs = loadTarifsJson(year);
+  console.log(`Loaded ${tarifs.length} tarif tables`);
+
   const tarifsByCanton = tarifs.reduce((acc, tarifRaw) => {
     const canton = getCantonID(tarifRaw);
     if (canton === -1) return acc;
@@ -51,6 +61,8 @@ export const loadTarifs = (year: number) => {
     const tarifs = tarifsByCanton[canton];
     saveTarifsJson(year, canton, tarifs);
   }
+
+  console.log('Finished loading tarif tables');
 };
 
 const loadTarifsJson = (year: number) => {
