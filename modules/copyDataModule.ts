@@ -12,8 +12,12 @@ export default defineNuxtModule({
     nuxt.options.experimental.noVueServer = true;
 
     nuxt.hook('nitro:build:public-assets', async (nitro) => {
+      console.log(`Nitro preset is ${nitro.options.preset}`);
+      const isVercel = nitro.options.preset.includes('vercel');
       const srcDir = dataParsedBasePath;
-      const destDir = `${nitro.options.output.serverDir}/${dataParsedRelativePath}`;
+      const destDir = `${
+        isVercel ? nitro.options.output.serverDir : nitro.options.output.dir
+      }/${dataParsedRelativePath}`;
 
       // To copy a folder or file, select overwrite accordingly
       try {

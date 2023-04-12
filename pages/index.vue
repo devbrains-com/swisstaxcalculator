@@ -355,6 +355,7 @@
 </template>
 
 <script setup lang="ts">
+import { FormKitNode } from '@formkit/core';
 import { nameof } from 'ts-simple-nameof';
 import {
   civilStatusOptions,
@@ -480,18 +481,27 @@ const detailsDeductionsFortune = computed(() => {
   return details;
 });
 
-const submit = async (value: any) => {
+const submit = async (value: any, node?: FormKitNode) => {
+  // Reset errors
+  node?.setErrors([]);
+
   // Add cantonId accordign to locationId
   const taxInput: Partial<TaxInput> = {
     ...value,
     cantonId: taxLocationsResult.data.value?.find((x) => x.BfsID === value.locationId)?.CantonID
   };
 
-  const result = await $fetch(`/api/taxes/`, {
-    method: 'post',
-    body: taxInput
-  });
+  try {
+    const result = await $fetch(`/api/taxes/`, {
+      method: 'post',
+      body: taxInput
+    });
 
-  taxes.value = result;
+    taxes.value = result;
+  } catch (error: any) {
+    // Show error to the user
+    node?.setErrors(['Es ist ein unerwarteter Fehler aufgetreten.', error.message]);
+    taxes.value = undefined;
+  }
 };
 </script>

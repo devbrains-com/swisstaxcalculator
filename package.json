@@ -40,7 +40,6 @@
   "scripts": {
     "build": "nuxt build",
     "checktypes": "vue-tsc --noemit",
-    "copy": "cpy ./data/parsed ./.vercel/output/functions/__nitro.func/data/parsed",
     "dev": "nuxt dev --experimental-json-modules",
     "generate": "nuxt generate",
     "lint": "eslint --ext .ts,.js,.vue,.json --ignore-path .gitignore --fix . && yarn checktypes",

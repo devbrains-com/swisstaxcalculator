@@ -13,7 +13,7 @@ const loadDeductionsIfRequired = async (cantonId: number, year: number) => {
   if (taxDeductionsByYearAndCanton.get(year)?.has(cantonId)) return;
 
   const resolvedPath = path.resolve(`${dataParsedBasePath}${year}/deductions/${cantonId}.json`);
-  // console.log(resolvedPath);
+  console.log('Loading deductions', resolvedPath);
   const deductionsRaw: TaxDeductionTable[] = JSON.parse(
     (await readFile(new URL(resolvedPath, import.meta.url))).toString()
   );
