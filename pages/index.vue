@@ -382,7 +382,7 @@ const defaultInput: Partial<TaxInput> = {
   ]
 };
 
-const taxLocationsResult = useLazyFetch(`/api/locations`);
+const taxLocationsResult = useLazyFetch(`/api/locations`, { server: false });
 
 const taxLocations = computed(
   () =>
