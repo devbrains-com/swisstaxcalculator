@@ -1,4 +1,5 @@
-import { TaxInput, TaxGrossNetDetail, TaxLocationRaw } from '../types';
+import { TaxLocationRaw } from '../types';
+import { TaxInput, TaxGrossNetDetail } from '../typesClient';
 
 export interface TaxDeductionDefinitionInput {
   target?: string;

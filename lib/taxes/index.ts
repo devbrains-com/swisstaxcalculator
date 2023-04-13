@@ -1,6 +1,6 @@
 import { calculateTaxesIncomeAndFortune } from './income';
 import { calculatePensionCapitalTaxes } from './pensionCapital';
-import { TaxInput, TaxResult } from './types';
+import { TaxInput, TaxResult } from './typesClient';
 
 export const calculateTaxes = async (taxInput: TaxInput): Promise<TaxResult> => {
   switch (taxInput.taxType) {

@@ -1,5 +1,11 @@
 import { getCantonIdByCityId } from '../location';
-import { TaxRelationship, TaxConfession, TaxInput, TaxIncomeType, TaxInputPerson } from '../types';
+import {
+  TaxRelationship,
+  TaxConfession,
+  TaxIncomeType,
+  TaxInput,
+  TaxInputPerson
+} from '../typesClient';
 
 export const getTaxInputForTest = async ({
   cityId = 0,

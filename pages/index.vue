@@ -357,12 +357,12 @@
 <script setup lang="ts">
 import { FormKitNode } from '@formkit/core';
 import { nameof } from 'ts-simple-nameof';
+import { TaxInput, TaxRelationship, TaxResult, TaxInputPerson } from '~/lib/taxes/typesClient';
 import {
   civilStatusOptions,
   confessionOptions,
   childrenOptions
 } from '~~/lib/components/listOptions';
-import { TaxInput, TaxInputPerson, TaxRelationship, TaxResult } from '~~/lib/taxes/types';
 
 const defaultInput: Partial<TaxInput> = {
   taxType: 'ev',

@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { dataParsedBasePath } from '../constants';
-import { TaxLocation } from '../types';
+import { TaxLocation } from '../typesClient';
 
 const locationsByYearAndCity = new Map<number, Map<number, TaxLocation>>();
 

@@ -63,14 +63,18 @@ const props = defineProps({
   }
 });
 
-const options = props.context.options ?? [];
+const options = computed(() => props.context.options ?? []);
 
 const selectedOption = ref<Option | undefined>(
-  options.find((option) => option.value === props.context._value)
+  options.value.find((option) => option.value === props.context._value)
 );
 
 watch(selectedOption, (value) => {
   props.context.node.input(value?.value);
+});
+
+watch(options, (value) => {
+  selectedOption.value = value.find((option) => option.value === props.context._value);
 });
 
 const query = ref('');
@@ -78,8 +82,8 @@ const filteredOptions = computed(() => {
   if (query.value.length < Number(props.context.filterMinLength ?? 0)) return [];
 
   return query.value === ''
-    ? options
-    : options.filter((item) => {
+    ? options.value
+    : options.value.filter((item) => {
         return item.label.toLowerCase().includes(query.value.toLowerCase());
       });
 });

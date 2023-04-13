@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { TaxFactors, TaxFactorsRaw } from './types';
 import { dataParsedBasePath, dataRawBasePath } from '../constants';
-import { TaxLocation } from '../types';
+import { TaxLocation } from '../typesClient';
 
 // - Load the raw tarifs from the tarifs.json file in the data folder by the year of the tarif
 // - export a json per item into the data folder with a subfolder by year

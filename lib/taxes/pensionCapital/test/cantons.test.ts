@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { calculatePensionCapitalTaxes } from '..';
 import { getTaxInputForTest } from '../../test/helpers';
-import { TaxRelationship, TaxConfession } from '../../types';
+import { TaxRelationship, TaxConfession } from '../../typesClient';
 
 describe('pension capital', () => {
   test.each<{ relationship: TaxRelationship; taxesIncomeBund: number }>([

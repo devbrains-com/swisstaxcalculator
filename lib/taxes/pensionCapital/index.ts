@@ -19,7 +19,7 @@ import {
 } from './types';
 import { calculateTaxesCantonAndCity } from '../factor';
 import { calculateTaxesForTarif, getTaxTarifGroup } from '../tarif';
-import { TaxInput, TaxResult } from '../types';
+import { TaxInput, TaxResult } from '../typesClient';
 
 export const calculatePensionCapitalTaxes = async (taxInput: TaxInput) => {
   const definitionCanton = getPensionCreditDefinition(taxInput.cantonId);

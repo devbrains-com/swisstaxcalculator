@@ -20,7 +20,8 @@ import {
 } from '~/lib/utils/dinero';
 import { getTaxTarifTable } from './provider';
 import { TaxTarif, TaxTarifGroup, TaxTarifTableItem } from './types';
-import { TaxRelationship, TaxType } from '../types';
+import { TaxType } from '../types';
+import { TaxRelationship } from '../typesClient';
 
 export const taxTarifGroups = [
   'VERHEIRATET',

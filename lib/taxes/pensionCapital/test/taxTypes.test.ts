@@ -3,7 +3,7 @@ import * as tarifs from '~/lib/taxes/tarif';
 import { dineroChf, dineroToNumber } from '~/lib/utils/dinero';
 import { calculateTaxesPensionCapitalByType } from '..';
 import { getTaxInputForTest } from '../../test/helpers';
-import { TaxRelationship } from '../../types';
+import { TaxRelationship } from '../../typesClient';
 import { getPensionCreditDefinition } from '../provider';
 
 vi.mock('../../tarif/provider', () => {

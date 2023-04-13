@@ -12,7 +12,8 @@ import {
 } from '~/lib/utils/dinero';
 import { maxSalaryNbuAlv } from './constants';
 import { TaxDeductionDefinition, TaxDeductionTableExtended, TaxDeductionTableItem } from './types';
-import { TaxInput, TaxGrossNetDetail, TaxDeductionResultItem } from '../types';
+import { TaxDeductionResultItem } from '../types';
+import { TaxInput, TaxGrossNetDetail } from '../typesClient';
 
 export const taxDeductionDefinitions: TaxDeductionDefinition[] = [
   {

@@ -1,6 +1,6 @@
 import { dineroChf, dineroRound, multiplyDineroFactor } from '~/lib/utils/dinero';
 import { getPersonnelTax } from './provider';
-import { TaxInput } from '../types';
+import { TaxInput } from '../typesClient';
 
 export const calculateTaxesPersonnel = (taxInput: TaxInput) => {
   const taxes = getPersonnelTax(taxInput.cantonId);

@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { dineroToNumber, dineroChf } from '~/lib/utils/dinero';
 import { getTaxTarifGroup, calculateTaxesAmount } from '..';
-import { TaxRelationship } from '../../types';
+import { TaxRelationship } from '../../typesClient';
 import { getTaxTarifTable } from '../provider';
 import { TaxTarif, TaxTarifGroup } from '../types';
 

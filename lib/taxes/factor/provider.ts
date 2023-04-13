@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { TaxFactors } from './types';
 import { dataParsedBasePath } from '../constants';
-import { TaxInput } from '../types';
+import { TaxInput } from '../typesClient';
 
 const taxFactorsByYearCantonAndCity = new Map<number, Map<number, Map<number, TaxFactors>>>();
 

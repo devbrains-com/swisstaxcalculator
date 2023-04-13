@@ -1,4 +1,4 @@
-import { TaxInput } from './types';
+import { TaxInput } from './typesClient';
 
 export const isMarried = (taxInput: TaxInput) =>
   taxInput.relationship === 'm' || taxInput.relationship === 'rp';

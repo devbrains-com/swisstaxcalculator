@@ -17,12 +17,8 @@ import { calculateTaxesCantonAndCity } from '../factor';
 import { validateTaxInput } from '../helpers';
 import { calculateTaxesPersonnel } from '../personnel';
 import { getTaxTarifGroup, calculateTaxesForTarif } from '../tarif';
-import {
-  TaxInput,
-  TaxResult,
-  TaxDeductionResultItem,
-  TaxDeductionResultItemDisplay
-} from '../types';
+import { TaxDeductionResultItem } from '../types';
+import { TaxInput, TaxResult, TaxDeductionResultItemDisplay } from '../typesClient';
 
 export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promise<TaxResult> => {
   validateTaxInput(taxInput);

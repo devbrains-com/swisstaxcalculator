@@ -1,7 +1,7 @@
 import { DineroChf, dineroRound, multiplyDineroPercent, dineroAddMany } from '~/lib/utils/dinero';
 import { getTaxFactors } from './provider';
 import { TaxFactors } from './types';
-import { TaxConfession, TaxInput } from '../types';
+import { TaxConfession, TaxInput } from '../typesClient';
 
 export const getChurchIncomeFactor = (confession: TaxConfession, factors: TaxFactors) => {
   switch (confession) {

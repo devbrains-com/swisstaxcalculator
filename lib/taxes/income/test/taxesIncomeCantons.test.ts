@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { calculateTaxesIncomeAndFortune } from '..';
 import { getTaxInputForTest } from '../../test/helpers';
-import { TaxConfession, TaxRelationship } from '../../types';
+import { TaxRelationship, TaxConfession } from '../../typesClient';
 
 describe('taxes', () => {
   test.each<{ relationship: TaxRelationship; income: number; expected: number }>([
