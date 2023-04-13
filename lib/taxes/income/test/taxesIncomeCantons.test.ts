@@ -227,11 +227,11 @@ describe('taxes', () => {
       confession: 'protestant',
       fortune: 500000,
       income: 100000,
-      taxesIncomeCanton: 10875,
-      taxesIncomeCity: 10875,
+      taxesIncomeCanton: 21750,
+      taxesIncomeCity: 0,
       taxesIncomeChurch: 1740,
-      taxesFortuneCanton: 1400,
-      taxesFortuneCity: 1400,
+      taxesFortuneCanton: 2800,
+      taxesFortuneCity: 0,
       taxesFortuneChurch: 0
     },
     {
