@@ -47,7 +47,7 @@
     "importdata": "ts-node ./lib/taxes/dataImporter.ts",
     "lint": "eslint --ext .ts,.js,.vue,.json --ignore-path .gitignore --fix . && yarn checktypes",
     "postinstall": "nuxt prepare",
-    "preview": "nuxt preview",
+    "preview": "PORT=3001 nuxt preview",
     "start": "node .output/server/index.mjs",
     "test": "vitest"
   }
