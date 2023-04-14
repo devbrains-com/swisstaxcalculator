@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   },
   security: {
     corsHandler: {
-      origin: '*'
+      origin: '*',
+      methods: ['GET', 'POST']
     }
   },
   devServer: {
