@@ -5,12 +5,7 @@ export default defineNuxtConfig({
   },
   security: {
     corsHandler: {
-      origin: [
-        /https:\/\/[\w-]*.pensly.ch/,
-        /https:\/\/pensly.vercel.app/,
-        /http:\/\/localhost:\d+/,
-        /https:\/\/[\w-]*devbrains-com.vercel.app/
-      ]
+      origin: ['http://localhost:3000']
     },
     enabled: true
   },
