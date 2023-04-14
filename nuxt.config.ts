@@ -3,10 +3,8 @@ export default defineNuxtConfig({
   experimental: {
     noVueServer: false // Is set to true in the copyDataModule
   },
-  security: {
-    corsHandler: {
-      origin: '*' // Allow all origins
-    }
+  routeRules: {
+    '/api/**': { security: { corsHandler: { origin: '*' } } }
   },
   devServer: {
     port: 3001
