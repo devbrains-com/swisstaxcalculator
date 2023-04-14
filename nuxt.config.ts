@@ -1,3 +1,22 @@
+const corsHandler = (origin: string) => {
+  const origins = [
+    /https:\/\/[\w-]*.pensly.ch/,
+    /https:\/\/pensly.vercel.app/,
+    /http:\/\/localhost:\d+/,
+    /https:\/\/[\w-]*devbrains-com.vercel.app/
+  ];
+
+  return origins.some((_origin) => {
+    console.log('origin', _origin);
+    if (_origin instanceof RegExp) {
+      console.log('is regex match', _origin.test(origin));
+      return _origin.test(origin);
+    }
+
+    return origin === _origin;
+  });
+};
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   experimental: {
@@ -5,24 +24,12 @@ export default defineNuxtConfig({
   },
   security: {
     corsHandler: {
-      origin: (origin: string) => {
-        const origins = [
-          /https:\/\/[\w-]*.pensly.ch/,
-          /https:\/\/pensly.vercel.app/,
-          /http:\/\/localhost:\d+/,
-          /https:\/\/[\w-]*devbrains-com.vercel.app/
-        ];
-
-        return origins.some((_origin) => {
-          console.log('origin', _origin);
-          if (_origin instanceof RegExp) {
-            console.log('is regex match', _origin.test(origin));
-            return _origin.test(origin);
-          }
-
-          return origin === _origin;
-        });
-      }
+      origin: [
+        /https:\/\/[\w-]*.pensly.ch/,
+        /https:\/\/pensly.vercel.app/,
+        /http:\/\/localhost:\d+/,
+        /https:\/\/[\w-]*devbrains-com.vercel.app/
+      ]
     }
   },
   devServer: {
