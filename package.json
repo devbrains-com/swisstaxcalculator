@@ -30,6 +30,7 @@
     "eslint-plugin-sort-class-members": "^1.17.1",
     "eslint-plugin-vue": "^9.10.0",
     "npx": "^10.2.2",
+    "nuxt-security": "^0.13.0",
     "nuxt-vitest": "^0.6.9",
     "postcss": "^8.4.21",
     "prettier": "^2.8.7",

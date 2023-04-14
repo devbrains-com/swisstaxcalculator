@@ -3,6 +3,14 @@ export default defineNuxtConfig({
   experimental: {
     noVueServer: false // Is set to true in the copyDataModule
   },
+  security: {
+    corsHandler: {
+      origin: ['localhost:3000']
+    }
+  },
+  devServer: {
+    port: 3001
+  },
   nitro: {
     prerender: {
       routes: ['/']
@@ -21,14 +29,16 @@ export default defineNuxtConfig({
       autoprefixer: {}
     }
   },
-  modules: ['@formkit/nuxt', 'nuxt-headlessui', 'nuxt-vitest'],
+  modules: ['@formkit/nuxt', 'nuxt-headlessui', 'nuxt-vitest', 'nuxt-security'],
   build: {
     analyze: true
   },
   app: {
     head: {
       // Font for tailwind ui
-      link: [{ rel: 'stylesheet', href: 'https://rsms.me/inter/inter.css' }],
+      link: [
+        { rel: 'stylesheet', href: 'https://rsms.me/inter/inter.css', crossorigin: 'anonymous' }
+      ],
       htmlAttrs: {
         class: 'bg-normal-50 font-light text-normal-900',
         style: 'margin-left: calc(100vw - 100%);'
