@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   },
   security: {
     corsHandler: {
-      origin: ['localhost:3000']
+      origin: ['http://localhost:3000']
     }
   },
   devServer: {
