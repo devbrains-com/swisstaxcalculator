@@ -3,16 +3,19 @@ export default defineNuxtConfig({
   experimental: {
     noVueServer: false // Is set to true in the copyDataModule
   },
-  security: {
-    corsHandler: {
-      origin: [
-        /https:\/\/[\w-]*.pensly.ch/,
-        /https:\/\/pensly.vercel.app/,
-        /http:\/\/localhost:\d+/,
-        /https:\/\/[\w-]*devbrains-com.vercel.app/
-      ]
-    },
-    enabled: true
+  routeRules: {
+    '/api/**': {
+      security: {
+        corsHandler: {
+          origin: [
+            /https:\/\/[\w-]*.pensly.ch/,
+            /https:\/\/pensly.vercel.app/,
+            /http:\/\/localhost:\d+/,
+            /https:\/\/[\w-]*devbrains-com.vercel.app/
+          ]
+        }
+      }
+    }
   },
   devServer: {
     port: 3001
