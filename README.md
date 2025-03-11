@@ -7,7 +7,7 @@ The goal of this repository is to implement all the logic used to calculate the 
 ## 👋 Get started
 
 - Clone the repository
-- yarn install (installs all the depencencies)
+- yarn install (installs all the dependencies)
 - yarn dev (runs the dev server)
 
 <br>
@@ -15,7 +15,7 @@ The goal of this repository is to implement all the logic used to calculate the 
 ## 👉 Functionality
 
 - **Nuxt 3** application with server api and static demo page (https://github.com/nuxt/nuxt)
-- **./pages/index.vue** shows an example page for calulcating taxes
+- **./pages/index.vue** shows an example page for calculating taxes
   - Live preview https://swisstaxcalculator.vercel.app/
   - Inspired by https://swisstaxcalculator.estv.admin.ch/#/calculator
 - **./server/api/** API routes for tax calculation and locations
@@ -47,7 +47,7 @@ The speciality about the gross- and net-income types is the deductions that are 
 
 https://swisstaxcalculator.estv.admin.ch/#/taxdata
 
-### (Pension) capital widhdrawal defintions
+### (Pension) capital withdrawal definitions
 
 Some information is from https://finpension.ch/de/vergleich-kapitalbezugssteuer/ and the updated values are from the individual canton tax laws directly.
 
@@ -64,13 +64,18 @@ Raw data: ./data/raw/...
 Parsed data: ./data/parsed/...
 ```
 
-To import more tax years, just copy the raw files into the corresponding folder and run the importdata script.
+To import more tax years, just copy the raw files into the corresponding folder and run the `importdata` script.
+
+The corresponding data can be retrieved by looking into the requests done by the browser (just save the results):
+1. tarifs.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-scales (API_exportManyTaxScales)
+2. deductions.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/deductions (API_exportManyDeductions)
+3. locations.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-rates (API_exportManySimpleRates)
 
 <br>
 
 ## 🚀 Blazing fast execution
 
-The data is parsed into small chunks, mostly per canton to guarante a fast loading time and minimal memory consumption. Once loaded, the data is held in memory until the service is stopped.
+The data is parsed into small chunks, mostly per canton to guarantee a fast loading time and minimal memory consumption. Once loaded, the data is held in memory until the service is stopped.
 
 In an **always on environment**, the data will be in memory until redeployed. This ensures maximum execution speed.
 
