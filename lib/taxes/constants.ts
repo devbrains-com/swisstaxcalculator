@@ -38,7 +38,7 @@ const taxIncomeTypes: TaxIncomeTypeList = [
 
 export const taxInputData: TaxInputData = {
   calculationTypes: taxCalculationTypes,
-  years: [2022, 2024],
+  years: [2022, 2024, 2025],
   relationships: taxRelationships,
   confessions: taxConfessions,
   incomeTypes: taxIncomeTypes,
