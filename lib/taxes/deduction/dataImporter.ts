@@ -80,9 +80,7 @@ const loadDeudctionsJson = (year: number) => {
 
 const saveDeductionsJson = (year: number, filename: string, payload: any) => {
   const filePath = path.resolve(`${dataParsedBasePath}${year}/deductions/`);
-  fs.mkdir(filePath, { recursive: true }, (err) => {
-    if (err) throw err;
-  });
+  fs.mkdirSync(filePath, { recursive: true });
   const data = JSON.stringify(payload, null);
   fs.writeFileSync(`${filePath}/${filename}.json`, data);
   // console.log(`Successfully saved ${filePath}/${filename}.json`);

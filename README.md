@@ -67,9 +67,10 @@ Parsed data: ./data/parsed/...
 To import more tax years, just copy the raw files into the corresponding folder and run the `importdata` script.
 
 The corresponding data can be retrieved by looking into the requests done by the browser (just save the results):
+
 1. tarifs.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-scales (API_exportManyTaxScales)
 2. deductions.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/deductions (API_exportManyDeductions)
-3. locations.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-rates (API_exportManySimpleRates)
+3. tarifs.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-rates (API_exportManySimpleRates)
 
 <br>
 

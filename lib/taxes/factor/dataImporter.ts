@@ -97,18 +97,14 @@ const loadFactorsJson = (year: number) => {
 
 const saveLocationsJson = (year: number, filename: string, payload: any) => {
   const filePath = path.resolve(`${dataParsedBasePath}${year}/`);
-  fs.mkdir(filePath, { recursive: true }, (err) => {
-    if (err) throw err;
-  });
+  fs.mkdirSync(filePath, { recursive: true });
   const data = JSON.stringify(payload, null);
   fs.writeFileSync(`${filePath}/${filename}.json`, data);
 };
 
 const saveFactorsJson = (year: number, filename: string, payload: any) => {
   const filePath = path.resolve(`${dataParsedBasePath}${year}/factors/`);
-  fs.mkdir(filePath, { recursive: true }, (err) => {
-    if (err) throw err;
-  });
+  fs.mkdirSync(filePath, { recursive: true });
   const data = JSON.stringify(payload, null);
   fs.writeFileSync(`${filePath}/${filename}.json`, data);
 };

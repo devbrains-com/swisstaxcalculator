@@ -10,7 +10,7 @@ const getCantonID = (tarif: TaxTarifRaw) => {
     return 0;
   }
 
-  if (tarif.Target === 'KANTON') {
+  if (tarif.Target === 'KANTON' || tarif.Target === 'GEMEINDE' || tarif.Target === 'KIRCHE') {
     return tarif.Location.CantonID;
   }
 
@@ -73,9 +73,7 @@ const loadTarifsJson = (year: number) => {
 
 const saveTarifsJson = (year: number, filename: string, payload: any) => {
   const filePath = path.resolve(`${dataParsedBasePath}${year}/tarifs/`);
-  fs.mkdir(filePath, { recursive: true }, (err) => {
-    if (err) throw err;
-  });
+  fs.mkdirSync(filePath, { recursive: true });
   const data = JSON.stringify(payload, null);
   fs.writeFileSync(`${filePath}/${filename}.json`, data);
 };
