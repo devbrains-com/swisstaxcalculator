@@ -20,6 +20,7 @@ export interface TaxTarif {
 }
 
 export type TaxTarifGroup = (typeof taxTarifGroups)[number];
+export type TaxTarifGroupWithFallback = Array<(typeof taxTarifGroups)[number]>;
 
 export interface TaxTarifRaw {
   TaxType: string;

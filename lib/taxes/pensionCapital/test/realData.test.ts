@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { DineroChf, dineroChf, dineroToNumber, dineroRound } from '~/lib/utils/dinero';
 import { calculatePensionCapitalIncomeTaxes } from '..';
-import { TaxTarifGroup } from '../../tarif/types';
+import { TaxTarifGroupWithFallback } from '../../tarif/types';
 import { getPensionCreditDefinition } from '../provider';
 
 describe('pension capital', () => {
@@ -14,56 +14,56 @@ describe('pension capital', () => {
   });
 
   test.each<{
-    tarifGroup: TaxTarifGroup;
+    tarifGroup: TaxTarifGroupWithFallback;
     capital: DineroChf;
     cantonId: number;
     incomeTaxFactor: number;
     expected: number;
   }>([
     {
-      tarifGroup: 'LEDIG_ALLEINE',
+      tarifGroup: ['LEDIG_ALLEINE'],
       cantonId: 0,
       capital: dineroChf(100000),
       incomeTaxFactor: 0.2,
       expected: 575
     },
     {
-      tarifGroup: 'LEDIG_ALLEINE',
+      tarifGroup: ['LEDIG_ALLEINE'],
       cantonId: 0,
       capital: dineroChf(100100),
       incomeTaxFactor: 0.2,
       expected: 576
     },
     {
-      tarifGroup: 'LEDIG_ALLEINE',
+      tarifGroup: ['LEDIG_ALLEINE'],
       cantonId: 0,
       capital: dineroChf(2000000),
       incomeTaxFactor: 0.2,
       expected: 46000
     },
     {
-      tarifGroup: 'LEDIG_ALLEINE',
+      tarifGroup: ['LEDIG_ALLEINE'],
       cantonId: 0,
       capital: dineroChf(100000000),
       incomeTaxFactor: 0.2,
       expected: 2300000
     },
     {
-      tarifGroup: 'LEDIG_KONKUBINAT',
+      tarifGroup: ['LEDIG_KONKUBINAT'],
       cantonId: 0,
       capital: dineroChf(100000),
       incomeTaxFactor: 0.2,
       expected: 575
     },
     {
-      tarifGroup: 'LEDIG_MIT_KINDER',
+      tarifGroup: ['LEDIG_MIT_KINDER'],
       cantonId: 0,
       capital: dineroChf(100000),
       incomeTaxFactor: 0.2,
       expected: 394
     },
     {
-      tarifGroup: 'VERHEIRATET',
+      tarifGroup: ['VERHEIRATET'],
       cantonId: 0,
       capital: dineroChf(100000),
       incomeTaxFactor: 0.2,

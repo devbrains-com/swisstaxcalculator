@@ -1,3 +1,7 @@
+import { DineroChf } from '~/lib/utils/dinero';
+import { TaxTarifGroupWithFallback } from '../tarif/types';
+import { TaxType } from '../types';
+
 export type PensionCreditTaxType =
   | 'IncomeTaxFactor'
   | 'RentIncomeFactor'
@@ -6,14 +10,14 @@ export type PensionCreditTaxType =
   | 'Tarif';
 
 export interface CalculateTarifAndFlattaxTaxParams {
-  tarifGroup: TaxTarifGroup;
+  tarifGroup: TaxTarifGroupWithFallback;
   capital: DineroChf;
   cantonId: number;
   year: number;
 }
 
 export interface CalculateIncomeTaxParams {
-  tarifGroup: TaxTarifGroup;
+  tarifGroup: TaxTarifGroupWithFallback;
   capital: DineroChf;
   cantonId: number;
   year: number;
@@ -21,7 +25,7 @@ export interface CalculateIncomeTaxParams {
 }
 
 export interface CalculateRentIncomeTaxesBaseParams {
-  tarifGroup: TaxTarifGroup;
+  tarifGroup: TaxTarifGroupWithFallback;
   tarifType: TaxType;
   capital: DineroChf;
   cantonId: number;

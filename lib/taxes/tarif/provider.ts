@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
-import { TaxTarif, TaxTarifGroup } from './types';
+import { TaxTarif, TaxTarifGroup, TaxTarifGroupWithFallback } from './types';
 import { dataParsedBasePath } from '../constants';
 import { TaxType } from '../types';
 
@@ -46,21 +46,23 @@ export const getTaxTarifTable = async (
   cantonId: number,
   year: number,
   taxType: TaxType,
-  tarifGroup: TaxTarifGroup
-) => {
+  tarifGroup: TaxTarifGroupWithFallback
+): Promise<[TaxTarif, TaxTarifGroup]> => {
   await loadTarifsIfRequired(cantonId, year);
 
   const tarifTables = taxTarifsByYearAndCanton.get(year)?.get(cantonId)?.get(taxType);
   if (!tarifTables)
     throw new Error(`No tarifs found for cantonId: ${cantonId}, tarifType: ${taxType}`);
 
-  const tarifTable = tarifTables.find(
-    (tarif) => tarif.group === 'ALLE' || tarif.group.includes(tarifGroup)
-  );
-  if (!tarifTable)
-    throw new Error(
-      `Tarif not found for cantonId: ${cantonId}, tarifType: ${taxType}, tarifGroup: ${tarifGroup}`
+  for (const group of tarifGroup) {
+    const tarifTable = tarifTables.find(
+      (tarif) => tarif.group === 'ALLE' || tarif.group.includes(group)
     );
 
-  return tarifTable;
+    if (tarifTable) return [tarifTable, group];
+  }
+
+  throw new Error(
+    `Tarif not found for cantonId: ${cantonId}, tarifType: ${taxType}, tarifGroup: ${tarifGroup}`
+  );
 };

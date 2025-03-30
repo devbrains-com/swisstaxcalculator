@@ -3,26 +3,37 @@ import { dineroToNumber, dineroChf } from '~/lib/utils/dinero';
 import { getTaxTarifGroup, calculateTaxesAmount } from '..';
 import { TaxRelationship } from '../../typesClient';
 import { getTaxTarifTable } from '../provider';
-import { TaxTarif, TaxTarifGroup } from '../types';
+import { TaxTarif, TaxTarifGroupWithFallback } from '../types';
 
 describe('tarif', () => {
   test('get tarif table by canton returns tarif', async () => {
-    expect(await getTaxTarifTable(0, 2022, 'EINKOMMENSSTEUER', 'LEDIG_ALLEINE')).toBeTruthy();
+    expect(await getTaxTarifTable(0, 2022, 'EINKOMMENSSTEUER', ['LEDIG_ALLEINE'])).toBeTruthy();
   });
 
   test('get tarif by canton throws if not found', () => {
-    expect(getTaxTarifTable(-1, 2022, 'EINKOMMENSSTEUER', 'LEDIG_ALLEINE')).rejects.toThrowError();
+    expect(
+      getTaxTarifTable(-1, 2022, 'EINKOMMENSSTEUER', ['LEDIG_ALLEINE'])
+    ).rejects.toThrowError();
   });
 
-  test.each<{ relationship: TaxRelationship; children: number; exprected: TaxTarifGroup }>([
-    { relationship: 's', children: 0, exprected: 'LEDIG_ALLEINE' },
-    { relationship: 's', children: 1, exprected: 'LEDIG_MIT_KINDER' },
-    { relationship: 'c', children: 0, exprected: 'LEDIG_KONKUBINAT' },
-    { relationship: 'c', children: 1, exprected: 'LEDIG_MIT_KINDER' },
-    { relationship: 'm', children: 0, exprected: 'VERHEIRATET' },
-    { relationship: 'm', children: 1, exprected: 'VERHEIRATET' }
-  ])('get tarif group throws if not found', ({ relationship, children, exprected }) => {
-    expect(getTaxTarifGroup(relationship, children)).toBe(exprected);
+  test.each<{
+    relationship: TaxRelationship;
+    children: number;
+    exprected: TaxTarifGroupWithFallback;
+  }>([
+    { relationship: 's', children: 0, exprected: ['LEDIG_ALLEINE'] },
+    { relationship: 's', children: 1, exprected: ['LEDIG_MIT_KINDER', 'LEDIG_ALLEINE'] },
+    { relationship: 'c', children: 0, exprected: ['LEDIG_KONKUBINAT'] },
+    { relationship: 'c', children: 1, exprected: ['LEDIG_MIT_KINDER', 'LEDIG_KONKUBINAT'] },
+    { relationship: 'm', children: 0, exprected: ['VERHEIRATET'] },
+    { relationship: 'm', children: 1, exprected: ['VERHEIRATET'] }
+  ])('get tarif group returns correct value', ({ relationship, children, exprected }) => {
+    expect(getTaxTarifGroup(relationship, children)).toStrictEqual(exprected);
+  });
+
+  test('get tarif group throws if not found', () => {
+    // @ts-expect-error we want an invalid value
+    expect(() => getTaxTarifGroup('a', 0)).toThrowError();
   });
 
   test.each<{ amount: number; percent: number; expected: number }>([

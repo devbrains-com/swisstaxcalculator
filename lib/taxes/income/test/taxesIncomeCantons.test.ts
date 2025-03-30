@@ -307,4 +307,98 @@ describe('taxes', () => {
       });
     }
   );
+
+  test.only.each<{
+    cityId: number;
+    cityName: string;
+    relationship: TaxRelationship;
+    confession: TaxConfession;
+    confession2?: TaxConfession;
+    fortune: number;
+    income: number;
+    children: number;
+    taxesIncomeCanton: number;
+    taxesIncomeCity: number;
+    taxesIncomeChurch: number;
+    taxesFortuneCanton: number;
+    taxesFortuneCity: number;
+    taxesFortuneChurch: number;
+  }>([
+    {
+      cityId: 1322,
+      cityName: 'Freienbach (SZ)',
+      relationship: 's',
+      children: 1,
+      confession: 'protestant',
+      fortune: 25000,
+      income: 100000,
+      taxesIncomeCanton: 3989,
+      taxesIncomeCity: 2626,
+      taxesIncomeChurch: 266,
+      taxesFortuneCanton: 18,
+      taxesFortuneCity: 12,
+      taxesFortuneChurch: 1
+    },
+    {
+      cityId: 1322,
+      cityName: 'Freienbach (SZ)',
+      relationship: 'c',
+      children: 1,
+      confession: 'protestant',
+      fortune: 25000,
+      income: 100000,
+      taxesIncomeCanton: 3989,
+      taxesIncomeCity: 2626,
+      taxesIncomeChurch: 266,
+      taxesFortuneCanton: 18,
+      taxesFortuneCity: 12,
+      taxesFortuneChurch: 1
+    }
+  ])(
+    'for $cityName, $relationship, $confession, $income, $fortune ',
+    async ({
+      cityId,
+      relationship,
+      confession,
+      confession2,
+      fortune,
+      income,
+      children,
+      taxesIncomeCanton,
+      taxesIncomeCity,
+      taxesIncomeChurch,
+      taxesFortuneCanton,
+      taxesFortuneCity,
+      taxesFortuneChurch
+    }) => {
+      const result = await calculateTaxesIncomeAndFortune(
+        await getTaxInputForTest({
+          cityId,
+          relationship,
+          confession,
+          confession2: confession2 ?? confession,
+          children,
+          income,
+          incomeType: 'taxable',
+          fortune
+        })
+      );
+
+      expect({
+        taxesIncomeCanton: result.taxesIncomeCanton,
+        taxesIncomeCity: result.taxesIncomeCity,
+        taxesIncomeChurch: result.taxesIncomeChurch,
+        taxesFortuneCanton: result.taxesFortuneCanton,
+        taxesFortuneCity: result.taxesFortuneCity,
+        taxesFortuneChurch: result.taxesFortuneChurch
+      }).toMatchObject({
+        taxesIncomeCanton,
+        taxesIncomeChurch,
+        taxesIncomeCity,
+        taxesFortuneCanton,
+        taxesFortuneCity,
+        taxesFortuneChurch
+      });
+    }
+  );
 });

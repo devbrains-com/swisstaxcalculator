@@ -19,7 +19,7 @@ import {
   dineroRound100Down
 } from '~/lib/utils/dinero';
 import { getTaxTarifTable } from './provider';
-import { TaxTarif, TaxTarifGroup, TaxTarifTableItem } from './types';
+import { TaxTarif, TaxTarifGroup, TaxTarifGroupWithFallback, TaxTarifTableItem } from './types';
 import { TaxType } from '../types';
 import { TaxRelationship } from '../typesClient';
 
@@ -33,13 +33,23 @@ export const taxTarifGroups = [
 export const getTaxTarifGroup = (
   relationship: TaxRelationship,
   children: number
-): TaxTarifGroup => {
-  if (['m', 'rp'].includes(relationship)) return 'VERHEIRATET';
-  if (children > 0) return 'LEDIG_MIT_KINDER';
-  if (relationship === 's') return 'LEDIG_ALLEINE';
-  if (relationship === 'c') return 'LEDIG_KONKUBINAT';
+): TaxTarifGroupWithFallback => {
+  const tarifGroupWithFallback: TaxTarifGroupWithFallback = [];
+  if (['m', 'rp'].includes(relationship)) {
+    tarifGroupWithFallback.push('VERHEIRATET');
+  } else {
+    // "LEDIG_MIT_KINDER" has a fallback of "LEDIG_ALLEINE" or "LEDIG_KONKUBINAT"
+    // as there are cantons without "LEDIG_MIT_KINDER" group
+    if (children > 0) tarifGroupWithFallback.push('LEDIG_MIT_KINDER');
+    if (relationship === 's') tarifGroupWithFallback.push('LEDIG_ALLEINE');
+    else if (relationship === 'c') tarifGroupWithFallback.push('LEDIG_KONKUBINAT');
+  }
 
-  throw new Error('Invalid relationship');
+  if (tarifGroupWithFallback.length === 0) {
+    throw new Error('No tarif group found');
+  }
+
+  return tarifGroupWithFallback;
 };
 
 export const isGroupEligableForSplitting = (group: TaxTarifGroup): boolean => {
@@ -167,14 +177,19 @@ const calculateTaxesByTypeFlattax = (amount: Dinero<number>, tarif: TaxTarif) =>
 export const calculateTaxesForTarif = async (
   cantonId: number,
   year: number,
-  tarifGroup: TaxTarifGroup,
+  tarifGroup: TaxTarifGroupWithFallback,
   tarifType: TaxType,
   taxableIncome: DineroChf
 ) => {
-  const tarifIncome = await getTaxTarifTable(cantonId, year, tarifType, tarifGroup);
+  const [tarifIncome, tarifGroupUsed] = await getTaxTarifTable(
+    cantonId,
+    year,
+    tarifType,
+    tarifGroup
+  );
 
   // Apply splitting if tarif includes splitting
-  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroup)) {
+  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed)) {
     taxableIncome = multiplyDineroFactor(taxableIncome, 1 / tarifIncome.splitting, 5);
   }
 
@@ -182,7 +197,7 @@ export const calculateTaxesForTarif = async (
   const taxes = calculateTaxesAmount(taxableIncomeRounded, tarifIncome);
 
   // Apply splitting if tarif includes splitting
-  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroup)) {
+  if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed)) {
     return multiplyDineroFactor(taxes, tarifIncome.splitting, 5);
   }
 
