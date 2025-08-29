@@ -1,4 +1,7 @@
 {
+  "compilerOptions": {
+    "verbatimModuleSyntax": false
+  },
   // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "ts-node": {
@@ -8,9 +11,5 @@
       "module": "CommonJS",
       "target": "ES6"
     }
-  },
-  "vueCompilerOptions": {
-    "experimentalRfc436": true,
-    "jsxTemplates": true
   }
 }

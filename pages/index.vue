@@ -305,18 +305,20 @@
               v-if="detailsGrossNet.length > 0"
               class="w-full font-numerictab border-spacing-y-2 border-separate"
             >
-              <tr class="bg-normal-200">
-                <th class="w-auto text-left">Brutto- / Nettoeinkommen</th>
-                <th class="w-32 text-right">P1</th>
-                <th class="w-32 text-right"><span v-if="showSecondPerson">P2</span></th>
-              </tr>
-              <tr v-for="(item, index) in detailsGrossNet" :key="index" class="last:font-medium">
-                <td>{{ item.label }}</td>
-                <td class="text-right">{{ displayCurrency(item.p1) }}</td>
-                <td class="text-right">
-                  <span v-if="showSecondPerson">{{ displayCurrency(item.p2 ?? 0) }}</span>
-                </td>
-              </tr>
+              <tbody>
+                <tr class="bg-normal-200">
+                  <th class="w-auto text-left">Brutto- / Nettoeinkommen</th>
+                  <th class="w-32 text-right">P1</th>
+                  <th class="w-32 text-right"><span v-if="showSecondPerson">P2</span></th>
+                </tr>
+                <tr v-for="(item, index) in detailsGrossNet" :key="index" class="last:font-medium">
+                  <td>{{ item.label }}</td>
+                  <td class="text-right">{{ displayCurrency(item.p1) }}</td>
+                  <td class="text-right">
+                    <span v-if="showSecondPerson">{{ displayCurrency(item.p2 ?? 0) }}</span>
+                  </td>
+                </tr>
+              </tbody>
             </table>
 
             <!-- Deductions -->
