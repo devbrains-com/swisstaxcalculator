@@ -58,19 +58,34 @@ Some information is from https://finpension.ch/de/vergleich-kapitalbezugssteuer/
 To run the service, there is no database required. All the data is either in the code files or imported from the raw data during dev / build time using the following command.
 
 ```
-yarn importdata <year>
+yarn importdata <year>[,<year>,...] [--download]
 
 Raw data: ./data/raw/...
 Parsed data: ./data/parsed/...
 ```
 
-To import more tax years, just copy the raw files into the corresponding folder and run the `importdata` script.
+### Automatic download & import
 
-The corresponding data can be retrieved by looking into the requests done by the browser (just save the results):
+Use the `--download` flag to fetch raw data directly from the ESTV API and import it in one step:
+
+```
+yarn importdata 2026 --download
+yarn importdata 2024,2025,2026 --download
+```
+
+### Manual import
+
+To import from existing raw files (without downloading), just run:
+
+```
+yarn importdata 2026
+```
+
+To import more tax years manually, copy the raw files into `./data/raw/<year>/` and run the `importdata` script. The raw data can be retrieved by looking into the requests done by the browser (just save the results):
 
 1. tarifs.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-scales (API_exportManyTaxScales)
 2. deductions.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/deductions (API_exportManyDeductions)
-3. tarifs.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-rates (API_exportManySimpleRates)
+3. factors.json: https://swisstaxcalculator.estv.admin.ch/#/taxdata/tax-rates (API_exportManySimpleRates)
 
 <br>
 
