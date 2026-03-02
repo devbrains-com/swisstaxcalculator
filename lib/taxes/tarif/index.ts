@@ -326,8 +326,11 @@ export const calculateTaxesForTarif = async (
     taxableIncome = multiplyDineroFactor(taxableIncome, 1 / tarifIncome.splitting, 5);
   }
 
-  const taxableIncomeRounded = dineroRound100Down(taxableIncome);
-  const taxes = calculateTaxesAmount(taxableIncomeRounded, tarifIncome);
+  // FORMEL uses continuous formulas that expect the exact taxable income;
+  // other types use discrete brackets where rounding to 100 is required.
+  const taxableIncomeForCalc =
+    tarifIncome.tableType === 'FORMEL' ? taxableIncome : dineroRound100Down(taxableIncome);
+  const taxes = calculateTaxesAmount(taxableIncomeForCalc, tarifIncome);
 
   // Apply splitting if tarif includes splitting
   if (tarifIncome.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed)) {
