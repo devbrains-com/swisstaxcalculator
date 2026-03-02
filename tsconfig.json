@@ -9,7 +9,8 @@
     "compilerOptions": {
       "esModuleInterop": true,
       "module": "CommonJS",
-      "target": "ES6"
+      "target": "ES6",
+      "types": ["node"]
     }
   }
 }
