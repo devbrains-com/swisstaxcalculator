@@ -78,7 +78,7 @@ export const calculateTaxesAmount = (amount: Dinero<number>, tarif: TaxTarif) =>
       taxes = calculateTaxesByTypeFreiburg(amount, tarif);
       break;
     case 'FORMEL':
-      taxes = dineroChf(0); // TODO implement
+      taxes = calculateTaxesByTypeFormel(amount, tarif);
       break;
     default:
       throw new Error(`Unknown table type ${tarif.tableType}`);
@@ -172,6 +172,139 @@ const calculateTaxesByTypeBund = (amount: Dinero<number>, tarif: TaxTarif) => {
 
 const calculateTaxesByTypeFlattax = (amount: Dinero<number>, tarif: TaxTarif) => {
   return multiplyDineroPercent(amount, tarif.table[0].percent, 5);
+};
+
+const evaluateFormula = (formula: string, wert: number): number => {
+  if (!formula || formula.trim() === '') return 0;
+
+  const tokens = tokenizeFormula(formula, wert);
+  const ctx = { pos: 0 };
+  const result = parseExpression(tokens, ctx);
+  if (ctx.pos !== tokens.length) {
+    throw new Error(`Unexpected token '${tokens[ctx.pos]}' in formula: ${formula}`);
+  }
+  return result;
+};
+
+const tokenizeFormula = (formula: string, wert: number): string[] => {
+  const tokens: string[] = [];
+  let i = 0;
+  const s = formula;
+
+  while (i < s.length) {
+    if (s[i] === ' ' || s[i] === '\t') {
+      i++;
+    } else if (s[i] === '$') {
+      // $wert$ variable
+      const end = s.indexOf('$', i + 1);
+      if (end === -1) throw new Error(`Unterminated variable in formula: ${formula}`);
+      const variableName = s.substring(i + 1, end);
+      if (variableName !== 'wert') {
+        throw new Error(`Unknown variable '${variableName}' in formula: ${formula}`);
+      }
+      tokens.push(String(wert));
+      i = end + 1;
+    } else if (s.substring(i, i + 3) === 'log') {
+      tokens.push('log');
+      i += 3;
+    } else if ('+-*/()'.includes(s[i])) {
+      tokens.push(s[i]);
+      i++;
+    } else if (/[\d.]/.test(s[i])) {
+      let num = '';
+      while (i < s.length && /[\d.]/.test(s[i])) {
+        num += s[i];
+        i++;
+      }
+      tokens.push(num);
+    } else {
+      throw new Error(`Unexpected character '${s[i]}' in formula: ${formula}`);
+    }
+  }
+  return tokens;
+};
+
+const parseExpression = (tokens: string[], ctx: { pos: number }): number => {
+  let left = parseTerm(tokens, ctx);
+  while (ctx.pos < tokens.length && (tokens[ctx.pos] === '+' || tokens[ctx.pos] === '-')) {
+    const op = tokens[ctx.pos++];
+    const right = parseTerm(tokens, ctx);
+    left = op === '+' ? left + right : left - right;
+  }
+  return left;
+};
+
+const parseTerm = (tokens: string[], ctx: { pos: number }): number => {
+  let left = parseUnary(tokens, ctx);
+  while (ctx.pos < tokens.length && (tokens[ctx.pos] === '*' || tokens[ctx.pos] === '/')) {
+    const op = tokens[ctx.pos++];
+    const right = parseUnary(tokens, ctx);
+    left = op === '*' ? left * right : left / right;
+  }
+  return left;
+};
+
+const parseUnary = (tokens: string[], ctx: { pos: number }): number => {
+  if (tokens[ctx.pos] === '-') {
+    ctx.pos++;
+    return -parsePrimary(tokens, ctx);
+  }
+  return parsePrimary(tokens, ctx);
+};
+
+const parsePrimary = (tokens: string[], ctx: { pos: number }): number => {
+  const token = tokens[ctx.pos];
+
+  if (token === 'log') {
+    ctx.pos++;
+    const value = parsePrimary(tokens, ctx);
+    return Math.log(value);
+  }
+
+  if (token === '(') {
+    ctx.pos++;
+    const value = parseExpression(tokens, ctx);
+    if (tokens[ctx.pos] !== ')') throw new Error('Missing closing parenthesis');
+    ctx.pos++;
+    return value;
+  }
+
+  // Must be a number
+  const num = parseFloat(token);
+  if (isNaN(num)) throw new Error(`Expected number but got '${token}'`);
+  ctx.pos++;
+  return num;
+};
+
+const calculateTaxesByTypeFormel = (amount: Dinero<number>, tarif: TaxTarif) => {
+  const wert = dineroToNumber(amount);
+
+  // Find applicable bracket (same logic as BUND - last bracket where amount <= income)
+  let lastTarif: TaxTarifTableItem | undefined;
+  for (let i = 0; i < tarif.table.length; i++) {
+    const tarifItem = tarif.table[i];
+    if (tarifItem.amount <= wert) {
+      lastTarif = tarifItem;
+    } else {
+      break;
+    }
+  }
+
+  if (!lastTarif) {
+    throw new Error(
+      `No Tarif found for income ${wert}, ${tarif.taxType}, ${tarif.tableType}`
+    );
+  }
+
+  if (!lastTarif.formula || lastTarif.formula.trim() === '') {
+    return dineroChf(0);
+  }
+
+  const result = evaluateFormula(lastTarif.formula, wert);
+  if (!Number.isFinite(result)) {
+    return dineroChf(0);
+  }
+  return dineroChf(Math.max(0, result));
 };
 
 export const calculateTaxesForTarif = async (

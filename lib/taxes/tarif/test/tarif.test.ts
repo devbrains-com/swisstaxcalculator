@@ -10,8 +10,8 @@ describe('tarif', () => {
     expect(await getTaxTarifTable(0, 2022, 'EINKOMMENSSTEUER', ['LEDIG_ALLEINE'])).toBeTruthy();
   });
 
-  test('get tarif by canton throws if not found', () => {
-    expect(
+  test('get tarif by canton throws if not found', async () => {
+    await expect(
       getTaxTarifTable(-1, 2022, 'EINKOMMENSSTEUER', ['LEDIG_ALLEINE'])
     ).rejects.toThrowError();
   });
@@ -107,6 +107,91 @@ describe('tarif', () => {
       ]
     };
     expect(dineroToNumber(calculateTaxesAmount(dineroChf(amount), tarif))).toBe(expected);
+  });
+
+  test.each<{ amount: number; expected: number }>([
+    { amount: 0, expected: 0 },
+    { amount: 5000, expected: 0 },
+    { amount: 20000, expected: 256.9 },
+    { amount: 100000, expected: 11223.8 }
+  ])('calculate taxes amount type formel', ({ amount, expected }) => {
+    const tarif: TaxTarif = {
+      group: 'LEDIG_ALLEINE',
+      taxType: 'EINKOMMENSSTEUER',
+      tableType: 'FORMEL',
+      splitting: 0,
+      table: [
+        { formula: '', taxes: 0, percent: 0, amount: 0 },
+        {
+          formula:
+            '-0.827429* $wert$ + 0.089718* $wert$ * (log $wert$ - 1) + 829.418770',
+          taxes: 0,
+          percent: 0,
+          amount: 16716
+        },
+        {
+          formula:
+            '-0.328481* $wert$ + 0.043109 * $wert$ * (log $wert$ - 1) + (-1248.266121)',
+          taxes: 0,
+          percent: 0,
+          amount: 44577
+        },
+        {
+          formula:
+            '0.051162* $wert$ + 0.010441 * $wert$ * (log $wert$ - 1) + (-4888.819148)',
+          taxes: 0,
+          percent: 0,
+          amount: 111442
+        }
+      ]
+    };
+    expect(dineroToNumber(calculateTaxesAmount(dineroChf(amount), tarif))).toBeCloseTo(
+      expected,
+      1
+    );
+  });
+
+  test('calculate taxes amount type formel clamps negative values to zero', () => {
+    const tarif: TaxTarif = {
+      group: 'LEDIG_ALLEINE',
+      taxType: 'EINKOMMENSSTEUER',
+      tableType: 'FORMEL',
+      splitting: 0,
+      table: [{ formula: '-2 * $wert$', taxes: 0, percent: 0, amount: 0 }]
+    };
+
+    expect(dineroToNumber(calculateTaxesAmount(dineroChf(1000), tarif))).toBe(0);
+  });
+
+  test.each<{ formula: string }>([
+    { formula: 'log ($wert$ - $wert$)' },
+    { formula: '0 / 0' }
+  ])('calculate taxes amount type formel returns zero for non-finite result: $formula', ({ formula }) => {
+    const tarif: TaxTarif = {
+      group: 'LEDIG_ALLEINE',
+      taxType: 'EINKOMMENSSTEUER',
+      tableType: 'FORMEL',
+      splitting: 0,
+      table: [{ formula, taxes: 0, percent: 0, amount: 0 }]
+    };
+
+    expect(dineroToNumber(calculateTaxesAmount(dineroChf(1000), tarif))).toBe(0);
+  });
+
+  test.each<{ formula: string }>([
+    { formula: '$notwert$ + 1' },
+    { formula: '1 + (2' },
+    { formula: '1 2' }
+  ])('calculate taxes amount type formel throws for invalid formula: $formula', ({ formula }) => {
+    const tarif: TaxTarif = {
+      group: 'LEDIG_ALLEINE',
+      taxType: 'EINKOMMENSSTEUER',
+      tableType: 'FORMEL',
+      splitting: 0,
+      table: [{ formula, taxes: 0, percent: 0, amount: 0 }]
+    };
+
+    expect(() => calculateTaxesAmount(dineroChf(1000), tarif)).toThrowError();
   });
 
   test.each<{ amount: number; expected: number }>([
