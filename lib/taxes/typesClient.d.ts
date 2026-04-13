@@ -33,6 +33,32 @@ export interface TaxInput {
   fortune: number;
   persons: TaxInputPerson[];
   deductions?: TaxDeductionGeneralInput;
+  includeProgression?: boolean;
+}
+
+export interface ProgressionBracket {
+  lowerBound: number;
+  upperBound: number;
+  percent: number;
+  amountInBracket: number;
+  taxInBracket: number;
+}
+
+export interface ProgressionResult {
+  taxableIncome: number;
+  brackets: ProgressionBracket[];
+  currentBracketIndex: number;
+  amountIntoCurrentBracket: number;
+  amountToNextBracket: number | null;
+  nextBracketPercent: number | null;
+  previousBracketPercent: number | null;
+}
+
+export interface TaxProgressionResult {
+  bund?: ProgressionResult;
+  cantonIncome?: ProgressionResult;
+  cantonFortune?: ProgressionResult;
+  overall?: ProgressionResult;
 }
 
 export interface TaxGrossNetDetail {
@@ -76,6 +102,7 @@ export interface TaxResult {
   taxesPersonnel: number;
   taxesTotal: number;
   details: TaxDeductionResult;
+  progression?: TaxProgressionResult;
 }
 
 export interface TaxLocation {

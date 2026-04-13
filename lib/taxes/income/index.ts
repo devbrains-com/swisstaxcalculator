@@ -13,12 +13,28 @@ import {
   calculateDeductionByDefinition
 } from '../deduction';
 import { getTaxDecutionTable } from '../deduction/provider';
-import { calculateTaxesCantonAndCity } from '../factor';
+import {
+  calculateTaxesCantonAndCity,
+  getChurchIncomeFactor,
+  getChurchFortuneFactor
+} from '../factor';
+import { getTaxFactors } from '../factor/provider';
 import { validateTaxInput } from '../helpers';
 import { calculateTaxesPersonnel } from '../personnel';
-import { getTaxTarifGroup, calculateTaxesForTarif } from '../tarif';
+import {
+  getTaxTarifGroup,
+  calculateTaxesForTarif,
+  calculateProgressionForTarif,
+  scaleProgression,
+  combineOverallProgression
+} from '../tarif';
 import { TaxDeductionResultItem } from '../types';
-import { TaxInput, TaxResult, TaxDeductionResultItemDisplay } from '../typesClient';
+import {
+  TaxInput,
+  TaxResult,
+  TaxDeductionResultItemDisplay,
+  TaxProgressionResult
+} from '../typesClient';
 
 export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promise<TaxResult> => {
   validateTaxInput(taxInput);
@@ -56,6 +72,65 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
 
   const taxesPersonnel = calculateTaxesPersonnel(taxInput);
 
+  let progression: TaxProgressionResult | undefined;
+  if (taxInput.includeProgression) {
+    const tarifGroup = getTaxTarifGroup(taxInput.relationship, taxInput.children);
+    const factors = await getTaxFactors(taxInput);
+
+    // Average church factor across persons (mirrors calculateTaxesCantonAndCity)
+    const avgChurchIncome =
+      taxInput.persons.reduce(
+        (acc, p) => acc + getChurchIncomeFactor(p.confession, factors),
+        0
+      ) / taxInput.persons.length;
+    const avgChurchFortune =
+      taxInput.persons.reduce(
+        (acc, p) => acc + getChurchFortuneFactor(p.confession, factors),
+        0
+      ) / taxInput.persons.length;
+
+    // Steuerfuss as a multiplier (factors are expressed as percent of base tarif)
+    const cantonIncomeFactor =
+      (factors.IncomeRateCanton + factors.IncomeRateCity + avgChurchIncome) / 100;
+    const cantonFortuneFactor =
+      (factors.FortuneRateCanton + factors.FortuneRateCity + avgChurchFortune) / 100;
+
+    const [bund, cantonIncomeBase, cantonFortuneBase] = await Promise.all([
+      calculateProgressionForTarif(
+        0,
+        taxInput.year,
+        tarifGroup,
+        'EINKOMMENSSTEUER',
+        taxableIncomeBund
+      ),
+      calculateProgressionForTarif(
+        taxInput.cantonId,
+        taxInput.year,
+        tarifGroup,
+        'EINKOMMENSSTEUER',
+        taxableIncomeCanton
+      ),
+      calculateProgressionForTarif(
+        taxInput.cantonId,
+        taxInput.year,
+        tarifGroup,
+        'VERMOEGENSSTEUER',
+        taxableFortuneCanton
+      )
+    ]);
+
+    const cantonIncome = scaleProgression(cantonIncomeBase, cantonIncomeFactor);
+    const cantonFortune = scaleProgression(cantonFortuneBase, cantonFortuneFactor);
+    const overall = combineOverallProgression(
+      bund,
+      cantonIncome,
+      dineroToNumber(taxableIncomeBund),
+      dineroToNumber(taxableIncomeCanton)
+    );
+
+    progression = { bund, cantonIncome, cantonFortune, overall };
+  }
+
   const taxesTotal = dineroAddMany(
     taxesIncomeCanton,
     taxesIncomeCity,
@@ -87,7 +162,8 @@ export const calculateTaxesIncomeAndFortune = async (taxInput: TaxInput): Promis
       taxableFortuneCanton: dineroToNumber(taxableFortuneCanton),
       taxableIncomeCanton: dineroToNumber(taxableIncomeCanton),
       taxableIncomeBund: dineroToNumber(taxableIncomeBund)
-    }
+    },
+    progression
   };
 
   return result;

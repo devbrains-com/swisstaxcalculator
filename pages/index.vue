@@ -294,6 +294,14 @@
             <div class="font-medium font-numerictab text-right">
               {{ displayCurrencyShort(taxes.taxesTotal) }}
             </div>
+
+            <a
+              v-if="taxes.progression"
+              href="#progression"
+              class="col-span-2 mt-3 text-sm text-primary-600 hover:text-primary-700"
+            >
+              Steuerprogression ansehen →
+            </a>
           </div>
         </div>
 
@@ -367,6 +375,41 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div
+        v-if="taxes?.progression"
+        id="progression"
+        class="mt-16 scroll-mt-6"
+      >
+        <h2 class="text-xl mb-1">Steuerprogression</h2>
+        <p class="text-sm text-normal-600 mb-6">
+          Effektive Grenzsteuersätze inklusive Kantons-, Gemeinde- und Kirchensteuer-Multiplikator.
+        </p>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-x-10 gap-y-10">
+          <ProgressionChart
+            v-if="taxes.progression.overall"
+            class="xl:col-span-2"
+            title="Gesamt (Kanton + Gemeinde + Kirche + Bund)"
+            :progression="taxes.progression.overall"
+          />
+          <ProgressionChart
+            v-if="taxes.progression.cantonIncome"
+            title="Einkommenssteuer Kanton + Gemeinde + Kirche"
+            :progression="taxes.progression.cantonIncome"
+          />
+          <ProgressionChart
+            v-if="taxes.progression.bund"
+            title="Direkte Bundessteuer"
+            :progression="taxes.progression.bund"
+          />
+          <ProgressionChart
+            v-if="taxes.progression.cantonFortune"
+            class="xl:col-span-2"
+            title="Vermögenssteuer Kanton + Gemeinde + Kirche"
+            :progression="taxes.progression.cantonFortune"
+          />
         </div>
       </div>
     </div>
@@ -515,7 +558,8 @@ const submit = async (value: any, node?: FormKitNode) => {
   // Add cantonId accordign to locationId
   const taxInput: Partial<TaxInput> = {
     ...value,
-    cantonId: taxLocationsResult.data.value?.find((x) => x.BfsID === value.locationId)?.CantonID
+    cantonId: taxLocationsResult.data.value?.find((x) => x.BfsID === value.locationId)?.CantonID,
+    includeProgression: true
   };
 
   try {

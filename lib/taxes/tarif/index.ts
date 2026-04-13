@@ -21,7 +21,7 @@ import {
 import { getTaxTarifTable } from './provider';
 import { TaxTarif, TaxTarifGroup, TaxTarifGroupWithFallback, TaxTarifTableItem } from './types';
 import { TaxType } from '../types';
-import { TaxRelationship } from '../typesClient';
+import { ProgressionBracket, ProgressionResult, TaxRelationship } from '../typesClient';
 
 export const taxTarifGroups = [
   'VERHEIRATET',
@@ -338,4 +338,351 @@ export const calculateTaxesForTarif = async (
   }
 
   return taxes;
+};
+
+export const calculateProgressionForTarif = async (
+  cantonId: number,
+  year: number,
+  tarifGroup: TaxTarifGroupWithFallback,
+  tarifType: TaxType,
+  taxableIncome: DineroChf
+): Promise<ProgressionResult> => {
+  const [tarif, tarifGroupUsed] = await getTaxTarifTable(cantonId, year, tarifType, tarifGroup);
+
+  let workingIncome = taxableIncome;
+  const applySplitting =
+    tarif.splitting > 0 && isGroupEligableForSplitting(tarifGroupUsed) ? tarif.splitting : 1;
+
+  if (applySplitting > 1) {
+    workingIncome = multiplyDineroFactor(workingIncome, 1 / applySplitting, 5);
+  }
+
+  const incomeForCalc =
+    tarif.tableType === 'FORMEL' ? workingIncome : dineroRound100Down(workingIncome);
+  const incomeNum = dineroToNumber(incomeForCalc);
+
+  // Workaround for wrong tables of type Zürich (same as calculateTaxesAmount)
+  let effectiveTableType = tarif.tableType;
+  if (tarif.tableType === 'ZUERICH' && tarif.table.find((t) => t.taxes > 0)) {
+    effectiveTableType = 'BUND';
+  }
+
+  let brackets = buildProgressionBrackets(incomeNum, tarif, effectiveTableType);
+
+  // Scale for splitting: both income-in-bracket and tax-in-bracket double (or whatever factor)
+  if (applySplitting > 1) {
+    brackets = brackets.map((b) => ({
+      lowerBound: b.lowerBound * applySplitting,
+      upperBound: b.upperBound * applySplitting,
+      percent: b.percent,
+      amountInBracket: b.amountInBracket * applySplitting,
+      taxInBracket: b.taxInBracket * applySplitting
+    }));
+  }
+
+  const scaledIncome = dineroToNumber(taxableIncome);
+  const currentBracketIndex = findCurrentBracketIndex(brackets, scaledIncome);
+  const currentBracket = brackets[currentBracketIndex];
+  const nextBracket = brackets[currentBracketIndex + 1];
+  const previousBracket = brackets[currentBracketIndex - 1];
+
+  const amountIntoCurrentBracket = currentBracket
+    ? Math.max(0, scaledIncome - currentBracket.lowerBound)
+    : 0;
+  const amountToNextBracket = nextBracket
+    ? Math.max(0, nextBracket.lowerBound - scaledIncome)
+    : null;
+
+  return {
+    taxableIncome: scaledIncome,
+    brackets,
+    currentBracketIndex,
+    amountIntoCurrentBracket,
+    amountToNextBracket,
+    nextBracketPercent: nextBracket ? nextBracket.percent : null,
+    previousBracketPercent: previousBracket ? previousBracket.percent : null
+  };
+};
+
+/**
+ * Multiply each bracket's percent & tax by a factor. Used to convert canton "base"
+ * tarif rates to effective rates by applying the Steuerfuss (canton + city + church).
+ */
+export const scaleProgression = (
+  progression: ProgressionResult,
+  factor: number
+): ProgressionResult => ({
+  ...progression,
+  brackets: progression.brackets.map((b) => ({
+    lowerBound: b.lowerBound,
+    upperBound: b.upperBound,
+    percent: b.percent * factor,
+    amountInBracket: b.amountInBracket,
+    taxInBracket: b.taxInBracket * factor
+  })),
+  nextBracketPercent:
+    progression.nextBracketPercent !== null ? progression.nextBracketPercent * factor : null,
+  previousBracketPercent:
+    progression.previousBracketPercent !== null
+      ? progression.previousBracketPercent * factor
+      : null
+});
+
+/**
+ * Build a combined progression across Bund + canton(effective).
+ *
+ * Bund and canton use slightly different taxable incomes (different deductions).
+ * We project both onto the canton-taxable-income axis: a bund bracket at
+ * bund-scale [a, b] appears at canton-scale [a + offset, b + offset] where
+ * offset = cantonTaxable - bundTaxable (can be negative).
+ *
+ * At each merged band, combinedPercent = cantonRate + bundRate (both marginal).
+ */
+export const combineOverallProgression = (
+  bund: ProgressionResult,
+  cantonIncomeEffective: ProgressionResult,
+  bundTaxable: number,
+  cantonTaxable: number
+): ProgressionResult => {
+  const offset = cantonTaxable - bundTaxable;
+
+  // Collect all bracket-boundary thresholds on the canton-taxable axis.
+  // Closed-band thresholds: both lowerBound and upperBound when upper > lower.
+  // Open-top brackets (upperBound === lowerBound): contribute only their lowerBound.
+  const thresholdSet = new Set<number>([0]);
+  for (const b of cantonIncomeEffective.brackets) {
+    if (b.lowerBound >= 0) thresholdSet.add(b.lowerBound);
+    if (b.upperBound > b.lowerBound && b.upperBound >= 0) thresholdSet.add(b.upperBound);
+  }
+  for (const b of bund.brackets) {
+    const cLow = b.lowerBound + offset;
+    if (cLow >= 0) thresholdSet.add(cLow);
+    if (b.upperBound > b.lowerBound) {
+      const cHigh = b.upperBound + offset;
+      if (cHigh >= 0) thresholdSet.add(cHigh);
+    }
+  }
+
+  const sorted = [...thresholdSet].sort((a, b) => a - b);
+
+  const raw: ProgressionBracket[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const lower = sorted[i];
+    const next = sorted[i + 1];
+    const isOpenTop = next === undefined;
+    const upper = isOpenTop ? lower : next;
+    const width = isOpenTop ? 0 : next - lower;
+    if (!isOpenTop && width <= 0) continue;
+
+    // Rate probed slightly inside the band (or just above lower for open-top)
+    // to avoid exact-threshold ambiguity.
+    const probe = isOpenTop ? lower + 1 : lower + width / 2;
+    const cantonRate = rateAtCanton(cantonIncomeEffective.brackets, probe);
+    const bundRate = rateAtCanton(bund.brackets, probe - offset);
+    const combined = cantonRate + bundRate;
+
+    const userIn = isOpenTop
+      ? Math.max(0, cantonTaxable - lower)
+      : Math.max(0, Math.min(next, cantonTaxable) - lower);
+
+    raw.push({
+      lowerBound: lower,
+      upperBound: upper,
+      percent: combined,
+      amountInBracket: userIn,
+      taxInBracket: (userIn * combined) / 100
+    });
+  }
+
+  // Merge adjacent bands that share the same effective rate (bracket bounds
+  // from Bund and canton often create cosmetic splits with identical rates).
+  const brackets: ProgressionBracket[] = [];
+  for (const band of raw) {
+    const last = brackets[brackets.length - 1];
+    const sameRate = last && Math.abs(last.percent - band.percent) < 1e-9;
+    const lastIsOpen = last && last.upperBound === last.lowerBound;
+    if (sameRate && !lastIsOpen) {
+      last.upperBound = band.upperBound === band.lowerBound ? last.lowerBound : band.upperBound;
+      last.amountInBracket += band.amountInBracket;
+      last.taxInBracket += band.taxInBracket;
+    } else {
+      brackets.push({ ...band });
+    }
+  }
+
+  const currentBracketIndex = findCurrentBracketIndex(brackets, cantonTaxable);
+  const currentBracket = brackets[currentBracketIndex];
+  const nextBracket = brackets[currentBracketIndex + 1];
+  const previousBracket = brackets[currentBracketIndex - 1];
+
+  return {
+    taxableIncome: cantonTaxable,
+    brackets,
+    currentBracketIndex,
+    amountIntoCurrentBracket: currentBracket
+      ? Math.max(0, cantonTaxable - currentBracket.lowerBound)
+      : 0,
+    amountToNextBracket: nextBracket ? Math.max(0, nextBracket.lowerBound - cantonTaxable) : null,
+    nextBracketPercent: nextBracket ? nextBracket.percent : null,
+    previousBracketPercent: previousBracket ? previousBracket.percent : null
+  };
+};
+
+const rateAtCanton = (brackets: ProgressionBracket[], x: number): number => {
+  if (x < 0) return 0;
+  for (let i = brackets.length - 1; i >= 0; i--) {
+    if (x >= brackets[i].lowerBound) return brackets[i].percent;
+  }
+  return 0;
+};
+
+export const buildProgressionBrackets = (
+  income: number,
+  tarif: TaxTarif,
+  effectiveTableType: TaxTarif['tableType'] = tarif.tableType
+): ProgressionBracket[] => {
+  switch (effectiveTableType) {
+    case 'FLATTAX':
+      return buildProgressionFlattax(income, tarif);
+    case 'ZUERICH':
+      return buildProgressionZurich(income, tarif);
+    case 'BUND':
+      return buildProgressionBund(income, tarif);
+    case 'FREIBURG':
+      return buildProgressionFreiburg(income, tarif);
+    case 'FORMEL':
+      return buildProgressionFormel(income, tarif);
+    default:
+      throw new Error(`Unknown table type ${effectiveTableType}`);
+  }
+};
+
+const findCurrentBracketIndex = (brackets: ProgressionBracket[], income: number): number => {
+  if (brackets.length === 0) return 0;
+  for (let i = brackets.length - 1; i >= 0; i--) {
+    if (income >= brackets[i].lowerBound) return i;
+  }
+  return 0;
+};
+
+// NOTE: bracket semantics:
+//   lowerBound / upperBound — true bracket bounds from the tarif table.
+//   A bracket with upperBound === lowerBound is the top, open-ended bracket.
+//   amountInBracket / taxInBracket — the user's CHF/tax inside that bracket
+//   (0 for brackets entirely above the user's income).
+
+const userAmountInBracket = (lower: number, upper: number, income: number): number => {
+  // Open-top bracket: upper === lower, user amount = max(0, income - lower)
+  if (upper <= lower) return Math.max(0, income - lower);
+  return Math.max(0, Math.min(upper, income) - lower);
+};
+
+const buildProgressionFlattax = (income: number, tarif: TaxTarif): ProgressionBracket[] => {
+  const percent = tarif.table[0]?.percent ?? 0;
+  // Single open-ended bracket at this rate.
+  return [
+    {
+      lowerBound: 0,
+      upperBound: 0,
+      percent,
+      amountInBracket: Math.max(0, income),
+      taxInBracket: (Math.max(0, income) * percent) / 100
+    }
+  ];
+};
+
+const buildProgressionZurich = (income: number, tarif: TaxTarif): ProgressionBracket[] => {
+  // Zürich-type tables express row.amount as the *width* of each band, so we
+  // accumulate. The last row's band defines the last finite boundary; no
+  // open-top convention (the ZÜRICH calc simply stops once income is consumed).
+  const brackets: ProgressionBracket[] = [];
+  let lower = 0;
+  for (const row of tarif.table) {
+    const bandWidth = row.amount;
+    if (bandWidth <= 0) continue;
+    const upper = lower + bandWidth;
+    const userIn = userAmountInBracket(lower, upper, income);
+    brackets.push({
+      lowerBound: lower,
+      upperBound: upper,
+      percent: row.percent,
+      amountInBracket: userIn,
+      taxInBracket: (userIn * row.percent) / 100
+    });
+    lower = upper;
+  }
+  return brackets;
+};
+
+const buildProgressionBund = (income: number, tarif: TaxTarif): ProgressionBracket[] => {
+  const brackets: ProgressionBracket[] = [];
+  for (let i = 0; i < tarif.table.length; i++) {
+    const row = tarif.table[i];
+    const nextRow = tarif.table[i + 1];
+    const lower = row.amount;
+    const upper = nextRow ? nextRow.amount : lower; // top bracket: open-ended
+    const userIn = userAmountInBracket(lower, upper, income);
+    brackets.push({
+      lowerBound: lower,
+      upperBound: upper,
+      percent: row.percent,
+      amountInBracket: userIn,
+      taxInBracket: (userIn * row.percent) / 100
+    });
+  }
+  return brackets;
+};
+
+const buildProgressionFreiburg = (income: number, tarif: TaxTarif): ProgressionBracket[] => {
+  // Freiburg applies a single interpolated rate to the whole income → one bar
+  // at effective rate. There are no discrete "next brackets" that matter —
+  // the rate rises continuously with income.
+  const totalTax = dineroToNumber(
+    calculateTaxesByTypeFreiburg(dineroChf(income), tarif)
+  );
+  const effectivePercent = income > 0 ? (totalTax / income) * 100 : 0;
+  return [
+    {
+      lowerBound: 0,
+      upperBound: 0,
+      percent: effectivePercent,
+      amountInBracket: Math.max(0, income),
+      taxInBracket: totalTax
+    }
+  ];
+};
+
+const buildProgressionFormel = (income: number, tarif: TaxTarif): ProgressionBracket[] => {
+  const brackets: ProgressionBracket[] = [];
+  for (let i = 0; i < tarif.table.length; i++) {
+    const row = tarif.table[i];
+    const nextRow = tarif.table[i + 1];
+    const lower = row.amount;
+    const upper = nextRow ? nextRow.amount : lower; // top bracket: open-ended
+
+    const userIn = userAmountInBracket(lower, upper, income);
+
+    // Tax-in-bracket via formula at the bounds of the user's slice.
+    let taxInBand = 0;
+    let percent = row.percent;
+    if (userIn > 0 && row.formula && row.formula.trim() !== '') {
+      const userUpper = upper > lower ? Math.min(upper, income) : income;
+      const fLower = evaluateFormula(row.formula, lower);
+      const fUpper = evaluateFormula(row.formula, userUpper);
+      taxInBand = Math.max(
+        0,
+        (Number.isFinite(fUpper) ? fUpper : 0) - (Number.isFinite(fLower) ? fLower : 0)
+      );
+      if (taxInBand > 0 && userIn > 0) percent = (taxInBand / userIn) * 100;
+    }
+
+    brackets.push({
+      lowerBound: lower,
+      upperBound: upper,
+      percent,
+      amountInBracket: userIn,
+      taxInBracket: taxInBand
+    });
+  }
+  return brackets;
 };
